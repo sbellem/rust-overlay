@@ -21,7 +21,7 @@ let
   in
     stdenv.mkDerivation rec {
       inherit pname version src;
-      name = "${pname}-${version}-${platform}";
+      name = "${pname}-${version}";
 
       passthru.platform = platform;
 
@@ -34,7 +34,7 @@ let
         optional (!dontFixup && !hostPlatform.isDarwin) autoPatchelfHook;
 
       buildInputs =
-        optional (elem pname [ "rustc" "cargo" "llvm-tools-preview" ]) zlib ++
+        optional (!dontFixup && elem pname [ "rustc" "cargo" "llvm-tools-preview" ]) zlib ++
         # Nightly `rustc` since 2022-02-17 links to `libstdc++.so.6` on Linux.
         # https://github.com/oxalica/rust-overlay/issues/73
         optional (!dontFixup && !hostPlatform.isDarwin && pname == "rustc") gccForLibs.lib ++
@@ -78,7 +78,7 @@ let
       # Darwin binaries usually just work... except for these linking to rustc from another drv.
       postFixup = optionalString (hostPlatform.isDarwin && linksToRustc) ''
         for f in $out/bin/*; do
-          install_name_tool -add_rpath "${self.rustc}/lib" "$f" || true
+          install_name_tool -add_rpath "${self.rustc}/lib" "$f"
         done
       '';
 
